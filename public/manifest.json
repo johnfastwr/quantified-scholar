@@ -1,0 +1,16 @@
+{
+  "name": "Quantified Scholar",
+  "short_name": "Scholar",
+  "description": "Data-driven study tracker.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
