@@ -18,6 +18,7 @@ export const metadata = {
 };
 
 import { AuthProvider } from "../context/AuthContext";
+import { TimerProvider } from "../context/TimerContext";
 import Navbar from "../components/Navbar";
 
 export default function RootLayout({ children }) {
@@ -28,10 +29,12 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col">
         <AuthProvider>
-          <div style={{ paddingBottom: "80px" }}>
-            {children}
-          </div>
-          <Navbar />
+          <TimerProvider>
+            <div style={{ paddingBottom: "80px" }}>
+              {children}
+            </div>
+            <Navbar />
+          </TimerProvider>
         </AuthProvider>
       </body>
     </html>

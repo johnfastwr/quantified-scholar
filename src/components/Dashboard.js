@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../lib/firebase";
-import { collection, query, where, getDocs, orderBy, addDoc, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, Timestamp } from "firebase/firestore";
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 const COLORS = ['#8cb369', '#f4e285', '#f4a261', '#e76f51', '#2a9d8f', '#264653', '#e9c46a'];
@@ -187,103 +187,6 @@ export default function Dashboard() {
     fetchSessions();
   }, [user]);
 
-  const generateDummyData = () => {
-    if (!user) return;
-
-    const subjects = ["Math", "Physics", "Computer Science", "History"];
-    const now = new Date();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Step 1: Generate 40 sessions locally (instant, zero network)
-    const localSessions = [];
-    for (let i = 0; i < 40; i++) {
-      const daysAgo = Math.floor(Math.random() * 30);
-      const randomHour = Math.floor(Math.random() * 24);
-      const sessionDate = new Date(now);
-      sessionDate.setDate(sessionDate.getDate() - daysAgo);
-      sessionDate.setHours(randomHour, 0, 0, 0);
-      localSessions.push({
-        subject: subjects[Math.floor(Math.random() * subjects.length)],
-        durationMinutes: Math.floor(Math.random() * (120 - 20) + 20),
-        interruptions: Math.floor(Math.random() * 3),
-        focusScore: Math.floor(Math.random() * (100 - 70) + 70),
-        createdAt: sessionDate,
-      });
-    }
-
-    // Step 2: Compute all analytics instantly from local data
-    const dayMap = new Map();
-    const last90Days = [];
-    for (let i = 89; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().split("T")[0];
-      const entry = { dateObj: d, key, name: d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }), duration: 0, focusScoreTotal: 0, sessionCount: 0 };
-      last90Days.push(entry);
-      dayMap.set(key, entry);
-    }
-    const subjectTally = {};
-    const thirtyDaysAgo = new Date(today);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const chronoBlocks = { Morning: { s: 0, c: 0 }, Afternoon: { s: 0, c: 0 }, Evening: { s: 0, c: 0 }, Night: { s: 0, c: 0 } };
-
-    for (const sess of localSessions) {
-      const dateKey = new Date(sess.createdAt.getFullYear(), sess.createdAt.getMonth(), sess.createdAt.getDate()).toISOString().split("T")[0];
-      const dayEntry = dayMap.get(dateKey);
-      if (dayEntry) { dayEntry.duration += sess.durationMinutes; dayEntry.focusScoreTotal += sess.focusScore; dayEntry.sessionCount += 1; }
-      const mid = new Date(sess.createdAt); mid.setHours(0, 0, 0, 0);
-      if (mid.getTime() >= thirtyDaysAgo.getTime()) {
-        const sub = sess.subject.charAt(0).toUpperCase() + sess.subject.slice(1).toLowerCase();
-        subjectTally[sub] = (subjectTally[sub] || 0) + sess.durationMinutes;
-      }
-      const h = sess.createdAt.getHours();
-      const block = h >= 5 && h < 12 ? "Morning" : h >= 12 && h < 17 ? "Afternoon" : h >= 17 && h < 21 ? "Evening" : "Night";
-      chronoBlocks[block].s += sess.focusScore;
-      chronoBlocks[block].c += 1;
-    }
-
-    const last14Days = last90Days.slice(-14);
-    const last7Days = last90Days.slice(-7);
-    const avg14 = Math.round(last14Days.reduce((a, c) => a + c.duration, 0) / 14);
-    const chartData = last14Days.map(day => ({ ...day, baseline: avg14 }));
-    const todayMins = chartData[13].duration;
-    let status = "Neutral", diff = 0;
-    if (avg14 > 0) { diff = Math.round(((todayMins - avg14) / avg14) * 100); if (diff > 0) status = "Outperforming"; if (diff < 0) status = "Underperforming"; }
-    else if (todayMins > 0) { status = "Outperforming"; diff = 100; }
-
-    const avg90 = last90Days.reduce((a, c) => a + c.duration, 0) / 90;
-    const avg7 = last7Days.reduce((a, c) => a + c.duration, 0) / 7;
-    const isBurnout = avg90 > 10 && avg7 > (avg90 * 1.5);
-    const formattedSubjectData = Object.keys(subjectTally).map(k => ({ name: k, value: subjectTally[k] })).sort((a, b) => b.value - a.value);
-
-    const chronoIcons = {
-      Morning: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f4a261" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>,
-      Afternoon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e9c46a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>,
-      Evening: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e76f51" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 10V2"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m16 5-4 4-4-4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>,
-      Night: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2a9d8f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-    };
-    let maxAvg = 0, bestBlock = null;
-    for (const [block, bd] of Object.entries(chronoBlocks)) {
-      if (bd.c > 0) { const avg = Math.round(bd.s / bd.c); if (avg > maxAvg) { maxAvg = avg; bestBlock = { name: block, score: avg, icon: chronoIcons[block] }; } }
-    }
-
-    // Step 3: SET STATE INSTANTLY — graphs appear with zero wait
-    setData(chartData);
-    setTodayPerformance({ minutes: todayMins, status, diffPercentage: diff });
-    setBurnoutWarning(isBurnout);
-    setSubjectData(formattedSubjectData);
-    if (bestBlock) setChronotype(bestBlock);
-
-    globalCache = { data: chartData, subjectData: formattedSubjectData, todayPerformance: { minutes: todayMins, status, diffPercentage: diff }, burnoutWarning: isBurnout, chronotype: bestBlock };
-    lastFetchTime = Date.now();
-
-    // Step 4: Write to Firebase silently in the background (non-blocking)
-    const writes = localSessions.map(s =>
-      addDoc(collection(db, "sessions"), { userId: user.uid, subject: s.subject, durationMinutes: s.durationMinutes, interruptions: s.interruptions, focusScore: s.focusScore, createdAt: Timestamp.fromDate(s.createdAt) })
-    );
-    Promise.all(writes).catch(err => console.error("Background write error:", err));
-  };
 
   if (!user) {
     return <div style={{ textAlign: "center", marginTop: "2rem" }}>Please sign in to view your dashboard.</div>;
@@ -430,14 +333,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      <div style={{ textAlign: "center", marginTop: "3rem", marginBottom: "5rem" }}>
-        <button 
-          onClick={generateDummyData}
-          className="btn-secondary" 
-          style={{ fontSize: "0.8rem", opacity: 0.5, borderStyle: "dashed" }}>
-          + Generate Demo Data (Dev Only)
-        </button>
-      </div>
+
 
     </div>
   );

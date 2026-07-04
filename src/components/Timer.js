@@ -1,92 +1,64 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useTimer } from "../context/TimerContext";
 import { db } from "../lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
 
 export default function Timer() {
   const { user } = useAuth();
-  
-  const [isRunning, setIsRunning] = useState(false);
-  const [timeElapsed, setTimeElapsed] = useState(0); // in seconds
-  const [subject, setSubject] = useState("");
-  const [interruptions, setInterruptions] = useState(0);
-  
-  const [focusScore, setFocusScore] = useState(100);
-  
-  const timerRef = useRef(null);
+  const {
+    isRunning,
+    timeElapsed,
+    subject,
+    setSubject,
+    interruptions,
+    focusScore,
+    handleStart,
+    handlePause,
+    resetTimer,
+    setIsRunning,
+  } = useTimer();
 
-  useEffect(() => {
-    if (isRunning) {
-      timerRef.current = setInterval(() => {
-        setTimeElapsed((prev) => prev + 1);
-      }, 1000);
-    } else {
-      clearInterval(timerRef.current);
-    }
-    
-    return () => clearInterval(timerRef.current);
-  }, [isRunning]);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
 
-  // Calculate focus score dynamically
-  useEffect(() => {
-    // Basic algorithm: Start at 100.
-    // Every interruption costs 5 points.
-    // Every 10 minutes of pure focus adds 1 point (up to max 100).
-    const penalty = interruptions * 5;
-    const bonus = Math.floor(timeElapsed / 600); 
-    const score = Math.max(0, Math.min(100, 100 - penalty + bonus));
-    setFocusScore(score);
-  }, [timeElapsed, interruptions]);
-
-  const handleStart = () => {
-    setIsRunning(true);
-  };
-
-  const handlePause = () => {
-    if (isRunning) {
-      setIsRunning(false);
-      setInterruptions((prev) => prev + 1);
-    }
-  };
-
-  const handleEndSession = async () => {
+  const handleEndSession = () => {
     setIsRunning(false);
-    clearInterval(timerRef.current);
-    
-    if (timeElapsed < 60) {
-      alert("Session too short to record.");
-      resetTimer();
-      return;
-    }
 
     if (!user) {
-      alert("You must be signed in to save sessions.");
+      setSaveMessage("⚠ Sign in to save sessions.");
+      setTimeout(() => setSaveMessage(""), 3000);
       return;
     }
 
-    try {
-      await addDoc(collection(db, "sessions"), {
-        userId: user.uid,
-        subject: subject || "Uncategorized",
-        durationMinutes: Math.round(timeElapsed / 60),
-        interruptions,
-        focusScore,
-        createdAt: new Date(),
-      });
-      alert("Session saved!");
-      resetTimer();
-    } catch (error) {
-      console.error("Error saving session", error);
-      alert("Failed to save session. Make sure your Firebase is configured.");
+    if (timeElapsed < 5) {
+      setSaveMessage("Session too short to record.");
+      setTimeout(() => { setSaveMessage(""); resetTimer(); }, 2000);
+      return;
     }
-  };
 
-  const resetTimer = () => {
-    setTimeElapsed(0);
-    setInterruptions(0);
-    setSubject("");
+    setSaving(true);
+    setSaveMessage("");
+
+    // Fire-and-forget: Firestore persistence saves locally INSTANTLY,
+    // then syncs to the server in the background. No need to await.
+    addDoc(collection(db, "sessions"), {
+      userId: user.uid,
+      subject: subject || "Uncategorized",
+      durationMinutes: Math.max(1, Math.round(timeElapsed / 60)),
+      interruptions,
+      focusScore,
+      createdAt: Timestamp.now(),
+    }).catch(err => console.error("Background sync error:", err));
+
+    setSaving(false);
+    setSaveMessage("✓ Session saved!");
+    setTimeout(() => {
+      setSaveMessage("");
+      resetTimer();
+    }, 1200);
   };
 
   const formatTime = (seconds) => {
@@ -129,10 +101,27 @@ export default function Timer() {
         <span style={{ color: "var(--text-muted)" }}>Interruptions: {interruptions}</span>
       </div>
 
+      {/* Save status message */}
+      {saveMessage && (
+        <div style={{
+          marginBottom: "1.5rem",
+          padding: "0.8rem 1rem",
+          borderRadius: "10px",
+          fontSize: "0.95rem",
+          fontWeight: "600",
+          background: saveMessage.startsWith("✓") ? "rgba(16, 185, 129, 0.15)" : saveMessage.startsWith("✗") ? "rgba(239, 68, 68, 0.15)" : "rgba(255, 255, 255, 0.05)",
+          color: saveMessage.startsWith("✓") ? "#10b981" : saveMessage.startsWith("✗") ? "#ef4444" : "var(--text-muted)",
+          border: `1px solid ${saveMessage.startsWith("✓") ? "rgba(16, 185, 129, 0.3)" : saveMessage.startsWith("✗") ? "rgba(239, 68, 68, 0.3)" : "var(--glass-border)"}`,
+          transition: "all 0.3s ease",
+        }}>
+          {saveMessage}
+        </div>
+      )}
+
       <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
         {!isRunning ? (
           <button className="btn-primary" onClick={handleStart} style={{ padding: "1rem 2.5rem", fontSize: "1.2rem" }}>
-            Start Focus
+            {timeElapsed > 0 ? "Resume" : "Start Focus"}
           </button>
         ) : (
           <button className="btn-secondary" onClick={handlePause} style={{ padding: "1rem 2.5rem", fontSize: "1.2rem", borderColor: "rgba(239, 68, 68, 0.5)", color: "#ef4444" }}>
@@ -141,8 +130,12 @@ export default function Timer() {
         )}
         
         {timeElapsed > 0 && !isRunning && (
-          <button className="btn-secondary" onClick={handleEndSession} style={{ padding: "1rem 2rem" }}>
-            End & Save
+          <button 
+            className="btn-secondary" 
+            onClick={handleEndSession} 
+            disabled={saving}
+            style={{ padding: "1rem 2rem", opacity: saving ? 0.5 : 1 }}>
+            {saving ? "Saving..." : "End & Save"}
           </button>
         )}
       </div>
