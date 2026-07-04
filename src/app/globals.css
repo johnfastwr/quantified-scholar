@@ -1,19 +1,30 @@
 :root {
-  --bg-color: #fafafa;
-  --text-color: #333333;
-  --accent-color: #8da399; /* soft sage green */
-  --card-bg: #ffffff;
-  --border-color: #eaeaea;
+  --bg-color: #09090b; /* Deep charcoal/black */
+  --text-color: #f4f4f5;
+  --text-muted: #a1a1aa;
+  
+  /* Vibrant Cyan to Violet Gradient for Accents */
+  --accent-gradient: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  --accent-color: #8b5cf6; /* Fallback */
+  
+  /* Glassmorphism Variables */
+  --glass-bg: rgba(24, 24, 27, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-color: #121212;
-    --text-color: #e0e0e0;
-    --accent-color: #7b9488;
-    --card-bg: #1e1e1e;
-    --border-color: #333333;
-  }
+/* Force dark mode everywhere for the Premium Dark Glass look */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-geist-sans), -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(14, 165, 233, 0.08), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
+  background-attachment: fixed;
 }
 
 * {
@@ -22,13 +33,12 @@
   padding: 0;
 }
 
-body {
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* Typography Utilities */
+.gradient-text {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Zen Utility Classes */
@@ -41,47 +51,102 @@ body {
 
 .zen-header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .zen-title {
-  font-size: 2rem;
-  font-weight: 300;
-  letter-spacing: 1px;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -1px;
 }
 
-.auth-container {
-  background-color: var(--card-bg);
-  padding: 2rem;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  text-align: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+/* Glassmorphism Components */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* Buttons */
 .btn-primary {
-  background-color: var(--accent-color);
+  background: var(--accent-gradient);
   color: white;
   border: none;
-  padding: 0.8rem 1.5rem;
-  font-size: 1rem;
-  border-radius: 8px;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 12px;
   cursor: pointer;
-  transition: opacity 0.2s ease;
-  margin-top: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
 }
 
 .btn-primary:hover {
-  opacity: 0.9;
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
 }
 
 .btn-secondary {
   background-color: transparent;
   color: var(--text-color);
-  border: 1px solid var(--border-color);
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  border-radius: 6px;
+  border: 1px solid var(--glass-border);
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 12px;
   cursor: pointer;
-  margin-top: 1rem;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Inputs */
+.glass-input {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+  color: var(--text-color);
+  padding: 1rem;
+  border-radius: 12px;
+  width: 100%;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-input:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+/* Animations */
+@keyframes pulseGlow {
+  0% { text-shadow: 0 0 10px rgba(14, 165, 233, 0.2); transform: scale(1); }
+  50% { text-shadow: 0 0 30px rgba(139, 92, 246, 0.6); transform: scale(1.02); }
+  100% { text-shadow: 0 0 10px rgba(14, 165, 233, 0.2); transform: scale(1); }
+}
+
+.timer-active {
+  animation: pulseGlow 3s ease-in-out infinite;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

@@ -27,16 +27,10 @@ export default function Auth() {
 
   if (user) {
     return (
-      <div style={{
-        backgroundColor: "var(--card-bg)",
-        padding: "1rem 1.5rem",
-        borderRadius: "12px",
-        border: "1px solid var(--border-color)",
-        marginBottom: "2rem",
+      <div className="glass-card" style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           {user.photoURL ? (
@@ -79,17 +73,15 @@ export default function Auth() {
   }
 
   return (
-    <div style={{
-      backgroundColor: "var(--card-bg)",
-      padding: "2.5rem 2rem",
-      borderRadius: "16px",
-      border: "1px solid var(--border-color)",
-      marginBottom: "2rem",
+    <div className="glass-card" style={{
+      padding: "3rem 2rem",
       textAlign: "center",
-      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
     }}>
-      <h2 style={{ fontSize: "1.8rem", fontWeight: "300", marginBottom: "0.5rem", color: "var(--text-color)" }}>
-        Quantified Scholar
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}>
+        <img src="/logo.svg" alt="Quantified Scholar Logo" style={{ width: "90px", height: "90px", filter: "drop-shadow(0 0 20px rgba(139, 92, 246, 0.4))" }} />
+      </div>
+      <h2 style={{ fontSize: "2rem", fontWeight: "800", marginBottom: "0.5rem", letterSpacing: "-1px" }}>
+        <span className="gradient-text">Quantified</span> Scholar
       </h2>
       <p style={{ color: "var(--text-color)", opacity: 0.7, marginBottom: "2rem", fontSize: "1rem" }}>
         Data-driven focus tracking to protect your momentum.

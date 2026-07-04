@@ -29,15 +29,17 @@ export default function Navbar() {
       bottom: 0,
       left: 0,
       right: 0,
-      backgroundColor: "var(--bg-color)",
-      borderTop: "1px solid var(--border-color)",
+      background: "rgba(9, 9, 11, 0.7)",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      borderTop: "1px solid var(--glass-border)",
       display: "flex",
       justifyContent: "space-around",
       alignItems: "center",
       padding: "0.8rem 1rem",
       paddingBottom: "max(0.8rem, env(safe-area-inset-bottom))",
       zIndex: 1000,
-      boxShadow: "0 -4px 6px -1px rgba(0, 0, 0, 0.1)"
+      boxShadow: "0 -8px 32px 0 rgba(0, 0, 0, 0.4)"
     }}>
       {navItems.map((item) => {
         const isActive = pathname === item.path;

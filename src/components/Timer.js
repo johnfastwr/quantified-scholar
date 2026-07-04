@@ -96,7 +96,7 @@ export default function Timer() {
   };
 
   return (
-    <div className="zen-container" style={{ textAlign: "center", marginTop: "2rem" }}>
+    <div className="zen-container glass-card" style={{ textAlign: "center", marginTop: "2rem" }}>
       <div style={{ marginBottom: "2rem" }}>
         <input 
           type="text" 
@@ -104,46 +104,44 @@ export default function Timer() {
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
           disabled={isRunning}
-          style={{
-            padding: "0.8rem",
-            fontSize: "1.2rem",
-            width: "100%",
-            borderRadius: "8px",
-            border: "1px solid var(--border-color)",
-            backgroundColor: "var(--card-bg)",
-            color: "var(--text-color)",
-            textAlign: "center"
-          }}
+          className="glass-input"
+          style={{ textAlign: "center", fontSize: "1.2rem", padding: "1rem" }}
         />
       </div>
 
-      <div style={{
-        fontSize: "6rem",
-        fontWeight: "200",
-        fontVariantNumeric: "tabular-nums",
-        letterSpacing: "-2px",
-        marginBottom: "1rem"
-      }}>
+      <div 
+        className={isRunning ? "timer-active" : ""}
+        style={{
+          fontSize: "6.5rem",
+          fontWeight: "800",
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: "-3px",
+          marginBottom: "1rem",
+          transition: "all 0.3s ease",
+          color: isRunning ? "transparent" : "var(--text-color)"
+        }}>
         {formatTime(timeElapsed)}
       </div>
 
-      <div style={{ marginBottom: "2rem", color: "var(--accent-color)" }}>
-        Focus Score: {focusScore}% | Interruptions: {interruptions}
+      <div style={{ marginBottom: "2.5rem", fontWeight: "600", fontSize: "1.1rem" }}>
+        <span className="gradient-text">Focus Score: {focusScore}%</span> 
+        <span style={{ color: "var(--text-muted)", margin: "0 0.5rem" }}>|</span> 
+        <span style={{ color: "var(--text-muted)" }}>Interruptions: {interruptions}</span>
       </div>
 
       <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
         {!isRunning ? (
-          <button className="btn-primary" onClick={handleStart} style={{ padding: "1rem 2rem", fontSize: "1.2rem" }}>
+          <button className="btn-primary" onClick={handleStart} style={{ padding: "1rem 2.5rem", fontSize: "1.2rem" }}>
             Start Focus
           </button>
         ) : (
-          <button className="btn-secondary" onClick={handlePause} style={{ padding: "1rem 2rem", fontSize: "1.2rem", borderColor: "#e74c3c", color: "#e74c3c" }}>
+          <button className="btn-secondary" onClick={handlePause} style={{ padding: "1rem 2.5rem", fontSize: "1.2rem", borderColor: "rgba(239, 68, 68, 0.5)", color: "#ef4444" }}>
             Pause
           </button>
         )}
         
         {timeElapsed > 0 && !isRunning && (
-          <button className="btn-primary" onClick={handleEndSession} style={{ backgroundColor: "var(--text-color)" }}>
+          <button className="btn-secondary" onClick={handleEndSession} style={{ padding: "1rem 2rem" }}>
             End & Save
           </button>
         )}
