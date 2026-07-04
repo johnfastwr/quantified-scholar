@@ -13,6 +13,12 @@ let globalCache = null;
 let lastFetchTime = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Call this from outside (e.g. Timer) to force a refresh on next visit
+export function invalidateDashboardCache() {
+  globalCache = null;
+  lastFetchTime = 0;
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [data, setData] = useState(globalCache ? globalCache.data : []);

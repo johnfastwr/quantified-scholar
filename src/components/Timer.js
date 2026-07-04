@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTimer } from "../context/TimerContext";
 import { db } from "../lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { invalidateDashboardCache } from "./Dashboard";
 
 export default function Timer() {
   const { user } = useAuth();
@@ -55,6 +56,7 @@ export default function Timer() {
 
     setSaving(false);
     setSaveMessage("✓ Session saved!");
+    invalidateDashboardCache();
     setTimeout(() => {
       setSaveMessage("");
       resetTimer();
